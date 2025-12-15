@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en" class="transition-colors duration-300">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Studio Pro</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        apple: {
+                            dark: '#1c1c1e',
+                            darker: '#000000',
+                            light: '#fbfbfd',
+                            gray: '#f5f5f7',
+                            blue: '#007aff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons & Libs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(28, 28, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Inputs */
+        .input-apple {
+            background: #f5f5f7;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .input-apple:focus {
+            background: #ffffff;
+            border-color: #007aff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+        .dark .input-apple {
+            background: #2c2c2e;
+            color: white;
+            border: 1px solid #3a3a3c;
+        }
+        .dark .input-apple:focus {
+            background: #3a3a3c;
+            border-color: #0a84ff;
+        }
+
+        /* Segmented Control */
+        .segmented-control {
+            background: #f5f5f7;
+            padding: 3px;
+            border-radius: 8px;
+            display: flex;
+        }
+        .dark .segmented-control {
+            background: #2c2c2e;
+        }
+        .segmented-btn {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            border-radius: 6px;
+            color: #666;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .dark .segmented-btn {
+            color: #999;
+        }
+        .segmented-btn.active {
+            background: white;
+            color: #000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .dark .segmented-btn.active {
+            background: #636366;
+            color: white;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%239CA3AF' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .dark .drop-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%234B5563' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .drop-zone.dragover {
+            background-color: rgba(0, 122, 255, 0.05);
+            transform: scale(1.01);
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23007AFF' stroke-width='3' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+
+        /* Toggles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+        .toggle-checkbox { right: auto; }
+        #idModeToggle:checked { left: calc(100% - 1.5rem); border-color: #007aff; }
+        #idModeToggle:checked + label { background-color: #007aff; }
+        
+        /* Spinner */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-apple-light dark:bg-apple-darker text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="w-full glass-panel sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-layer-group text-sm"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight">PDF Studio <span class="text-blue-500">Pro</span></h1>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <!-- Dark Mode Toggle -->
+            <button id="themeToggle" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:block"></i>
+            </button>
+            <div class="hidden md:flex text-xs text-gray-500 dark:text-gray-400 font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
+                <i class="fa-solid fa-shield-halved mr-1.5"></i> Local Processing
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+        
+        <!-- Drop Zone -->
+        <div id="dropZone" class="drop-zone relative w-full h-40 rounded-2xl flex flex-col items-center justify-center cursor-pointer mb-8 group bg-gray-50 dark:bg-gray-900/50">
+            <input type="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/jpeg,image/png,application/pdf">
+            <div class="w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-md flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <i class="fa-solid fa-cloud-arrow-up text-xl text-blue-500"></i>
+            </div>
+            <p class="text-base font-medium text-gray-700 dark:text-gray-200">Drop files or click to browse</p>
+        </div>
+
+        <!-- Controls Toolbar -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-5 mb-8">
+            
+            <div class="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center">
+                
+                <!-- Group 1: Output Settings -->
+                <div class="flex flex-col md:flex-row gap-6 w-full xl:w-auto">
+                    
+                    <!-- ID Mode -->
+                    <div class="flex items-center gap-3 h-10">
+                        <div class="relative inline-block w-12 mr-2 align-middle select-none">
+                            <input type="checkbox" name="toggle" id="idModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 left-0 transition-all duration-300"/>
+                            <label for="idModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"></label>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">ID Mode</span>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:block w-px bg-gray-200 dark:bg-gray-800 h-10"></div>
+
+                    <!-- Quality Presets -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wide">Quality / Size</label>
+                        <div class="flex items-center gap-3">
+                            <div class="segmented-control" id="qualityPresets">
+                                <div class="segmented-btn" data-value="small">Small</div>
+                                <div class="segmented-btn active" data-value="medium">Medium</div>
+                                <div class="segmented-btn" data-value="best">Best</div>
+                                <div class="segmented-btn" data-value="custom">Custom</div>
+                            </div>
+                            
+                            <!-- Custom Size Input (Hidden by default) -->
+                            <div id="customSizeContainer" class="hidden relative w-24 transition-all">
+                                <input type="number" id="targetSizeInput" placeholder="Max MB" step="0.1" min="0.1" class="input-apple w-full pl-2 pr-8 py-1.5 rounded-lg text-sm">
+                                <span class="absolute right-2 top-1.5 text-xs text-gray-400 pointer-events-none">MB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 2: Filename & Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full xl:w-auto items-end sm:items-center">
+                    
+                    <div class="flex flex-col gap-1.5 w-full sm:w-64">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wide">Filename</label>
+                        <div class="relative">
+                            <input type="text" id="filenameInput" placeholder="merged_document" class="input-apple w-full px-3 py-2 rounded-lg text-sm" value="merged_document">
+                            <span class="absolute right-3 top-2 text-xs text-gray-400 pointer-events-none">.pdf</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+                        <button id="clearBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                        <button id="mergeBtn" class="flex-grow sm:flex-grow-0 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-95 h-[38px]">
+                            <span id="btnText">Merge PDF</span>
+                            <div id="btnLoader" class="loader hidden"></div>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Target Size Warning -->
+            <div id="compressionMsg" class="hidden mt-4 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg border border-blue-100 dark:border-blue-800">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <span>Optimizing file size. This might take a few seconds...</span>
+            </div>
+        </div>
+
+        <!-- Grid Container -->
+        <div id="fileGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-20">
+            <!-- Items injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-regular fa-folder-open text-3xl text-gray-300 dark:text-gray-600"></i>
+            </div>
+            <h3 class="text-base font-medium text-gray-900 dark:text-white">No files selected</h3>
+        </div>
+
+    </main>
+
+    <!-- Crop Modal -->
+    <div id="cropModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col h-[80vh] border border-gray-200 dark:border-gray-800">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">Crop Image</h3>
+                <button onclick="closeCropModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="flex-grow bg-black relative overflow-hidden">
+                <img id="cropImageTarget" src="" class="max-w-full max-h-full block">
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                <div class="text-xs text-gray-500">Drag corners to crop</div>
+                <div class="flex gap-3">
+                    <button onclick="closeCropModal()" class="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+                    <button onclick="applyCrop()" class="px-6 py-2 rounded-lg text-sm text-white bg-blue-600 font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // Check local storage or system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+        });
+
+        // --- Core App State ---
+        let files = []; 
+        let currentCropId = null;
+        let cropper = null;
+        let currentQualityMode = 'medium'; // small, medium, best, custom
+
+        // --- DOM Elements ---
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileGrid = document.getElementById('fileGrid');
+        const emptyState = document.getElementById('emptyState');
+        const targetSizeInput = document.getElementById('targetSizeInput');
+        const customSizeContainer = document.getElementById('customSizeContainer');
+        const filenameInput = document.getElementById('filenameInput');
+
+        // --- Quality Preset Logic ---
+        const presetBtns = document.querySelectorAll('.segmented-btn');
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // UI Update
+                presetBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Logic Update
+                currentQualityMode = btn.dataset.value;
+                if(currentQualityMode === 'custom') {
+                    customSizeContainer.classList.remove('hidden');
+                    targetSizeInput.focus();
+                } else {
+                    customSizeContainer.classList.add('hidden');
+                    targetSizeInput.value = ''; // Reset custom input when leaving custom mode
+                }
+            });
+        });
+
+        // --- Drag & Drop ---
+        new Sortable(fileGrid, {
+            animation: 150,
+            ghostClass: 'opacity-50',
+            onEnd: (evt) => {
+                const movedItem = files.splice(evt.oldIndex, 1)[0];
+                files.splice(evt.newIndex, 0, movedItem);
+            },
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFiles, false);
+
+        function handleDrop(e) {
+            handleFiles({ target: { files: e.dataTransfer.files } });
+        }
+
+        async function handleFiles(e) {
+            const newFiles = [...e.target.files];
+            for (const file of newFiles) {
+                if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+                    await addFile(file);
+                }
+            }
+            renderGrid();
+        }
+
+        // --- File Handling ---
+        async function addFile(file) {
+            const id = Math.random().toString(36).substr(2, 9);
+            const isPdf = file.type === 'application/pdf';
+            let preview = '';
+            
+            if (isPdf) {
+                preview = await generatePdfThumbnail(file);
+            } else {
+                preview = await readFileAsDataURL(file);
+            }
+
+            files.push({
+                id,
+                file,
+                type: isPdf ? 'pdf' : 'img',
+                preview,
+                rotation: 0
+            });
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function generatePdfThumbnail(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 0.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                return canvas.toDataURL();
+            } catch (e) {
+                console.error("PDF Thumbnail error", e);
+                return ''; 
+            }
+        }
+
+        // --- Rendering ---
+        function renderGrid() {
+            fileGrid.innerHTML = '';
+            if (files.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            files.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:border-gray-600 transition-all h-52 flex flex-col';
+                div.setAttribute('data-id', item.id);
+
+                const isImg = item.type === 'img';
+                
+                div.innerHTML = `
+                    <div class="relative h-36 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center overflow-hidden p-3">
+                        <img src="${item.preview}" class="object-contain w-full h-full transition-transform duration-300 shadow-sm" 
+                             style="transform: rotate(${item.rotation}deg)">
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button onclick="rotateFile('${item.id}')" class="w-8 h-8 bg-white dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-200 hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-rotate-right text-sm"></i>
+                            </button>
+                            ${isImg ? `
+                            <button onclick="initCrop('${item.id}')" class="w-8 h-8 bg-white dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-200 hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-crop-simple text-sm"></i>
+                            </button>` : ''}
+                        </div>
+                    </div>
+                    <div class="p-3 flex justify-between items-center bg-white dark:bg-gray-800 flex-grow border-t border-gray-100 dark:border-gray-700">
+                        <div class="truncate text-xs font-medium text-gray-600 dark:text-gray-300 w-3/4">
+                            ${item.file.name}
+                        </div>
+                        <button onclick="removeFile('${item.id}')" class="text-gray-400 hover:text-red-500 transition-colors">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                fileGrid.appendChild(div);
+            });
+        }
+
+        // --- Actions ---
+        window.rotateFile = (id) => {
+            const item = files.find(f => f.id === id);
+            if (item) {
+                item.rotation = (item.rotation + 90) % 360;
+                renderGrid();
+            }
+        };
+
+        window.removeFile = (id) => {
+            files = files.filter(f => f.id !== id);
+            renderGrid();
+        };
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (files.length > 0 && confirm('Clear all files?')) {
+                files = [];
+                renderGrid();
+            }
+        });
+
+        // --- Cropping ---
+        window.initCrop = (id) => {
+            currentCropId = id;
+            const item = files.find(f => f.id === id);
+            if (!item || item.type !== 'img') return;
+            const modal = document.getElementById('cropModal');
+            const imageTarget = document.getElementById('cropImageTarget');
+            imageTarget.src = item.preview;
+            modal.classList.remove('hidden');
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(imageTarget, { viewMode: 1, autoCropArea: 0.8, background: false });
+        };
+
+        window.closeCropModal = () => {
+            document.getElementById('cropModal').classList.add('hidden');
+            if (cropper) { cropper.destroy(); cropper = null; }
+            currentCropId = null;
+        };
+
+        window.applyCrop = () => {
+            if (!cropper || !currentCropId) return;
+            const canvas = cropper.getCroppedCanvas();
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const item = files.find(f => f.id === currentCropId);
+            if (item) {
+                item.preview = croppedDataUrl;
+                fetch(croppedDataUrl).then(res => res.blob()).then(blob => {
+                    item.file = new File([blob], item.file.name, { type: "image/jpeg" });
+                    item.rotation = 0;
+                    renderGrid();
+                    closeCropModal();
+                });
+            }
+        };
+
+        // --- PDF Merging & Compression Logic ---
+        const { PDFDocument, rgb, degrees } = PDFLib;
+
+        document.getElementById('mergeBtn').addEventListener('click', async () => {
+            if (files.length === 0) return alert('Please add files first.');
+
+            const btn = document.getElementById('mergeBtn');
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('btnLoader');
+            const compressionMsg = document.getElementById('compressionMsg');
+            const userFilename = filenameInput.value.trim() || "merged_document";
+            
+            btn.disabled = true;
+            btnText.textContent = "Processing";
+            loader.classList.remove('hidden');
+
+            try {
+                // Determine Mode parameters
+                const isIdMode = document.getElementById('idModeToggle').checked;
+                const targetSizeMB = (currentQualityMode === 'custom') ? parseFloat(targetSizeInput.value) : null;
+                
+                // Map presets to initial quality values (0.0 - 1.0)
+                let initialQuality = 0.8;
+                if (currentQualityMode === 'small') initialQuality = 0.3;
+                if (currentQualityMode === 'medium') initialQuality = 0.6;
+                if (currentQualityMode === 'best') initialQuality = 0.95;
+                if (currentQualityMode === 'custom' && targetSizeMB) initialQuality = 0.9; // Start high for custom target loop
+
+                let currentQuality = initialQuality;
+                let attempts = 0;
+                let success = false;
+                let finalPdfBytes = null;
+                const MAX_ATTEMPTS = targetSizeMB ? 3 : 1; 
+
+                while (attempts < MAX_ATTEMPTS && !success) {
+                    if (targetSizeMB && attempts > 0) {
+                        compressionMsg.classList.remove('hidden');
+                        currentQuality -= 0.3; 
+                        if (currentQuality < 0.2) currentQuality = 0.2;
+                    }
+
+                    const pdfDoc = await PDFDocument.create();
+                    
+                    const compressImage = async (file, q) => {
+                        return new Promise((resolve) => {
+                            const img = new Image();
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                img.src = e.target.result;
+                                img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    // Scale logic: Aggressive downscaling for 'small' mode
+                                    let scale = 1;
+                                    if (currentQualityMode === 'small') scale = 0.6; 
+                                    if (q < 0.4) scale = 0.7; // For custom target loops
+                                    
+                                    canvas.width = img.width * scale;
+                                    canvas.height = img.height * scale;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                    resolve(canvas.toDataURL('image/jpeg', q));
+                                };
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    };
+
+                    if (isIdMode) {
+                        const page = pdfDoc.addPage([595.28, 841.89]);
+                        const pageWidth = page.getWidth();
+                        const pageHeight = page.getHeight();
+                        const targets = files.slice(0, 2);
+                        let yPos = pageHeight / 2 + 50; 
+
+                        for (const item of targets) {
+                            if (item.type === 'pdf') {
+                                const thumb = await generatePdfThumbnail(item.file);
+                                const imgBytes = await fetch(thumb).then(res => res.arrayBuffer());
+                                const embedImg = await pdfDoc.embedPng(imgBytes);
+                                const dims = embedImg.scaleToFit(250, 250);
+                                page.drawImage(embedImg, { x: (pageWidth - dims.width) / 2, y: yPos, width: dims.width, height: dims.height });
+                            } else {
+                                const compressedDataUrl = await compressImage(item.file, currentQuality);
+                                const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
+                                const embedImg = await pdfDoc.embedJpg(imgBytes);
+                                const dims = embedImg.scaleToFit(250, 250);
+                                page.drawImage(embedImg, { x: (pageWidth - dims.width) / 2, y: yPos, width: dims.width, height: dims.height, rotate: degrees(item.rotation) });
+                            }
+                            yPos -= 300;
+                        }
+                    } else {
+                        for (const item of files) {
+                            if (item.type === 'pdf') {
+                                const arrayBuffer = await item.file.arrayBuffer();
+                                const srcPdf = await PDFDocument.load(arrayBuffer);
+                                const copiedPages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
+                                copiedPages.forEach((page) => {
+                                    const existingRotation = page.getRotation().angle;
+                                    page.setRotation(degrees(existingRotation + item.rotation));
+                                    pdfDoc.addPage(page);
+                                });
+                            } else {
+                                const compressedDataUrl = await compressImage(item.file, currentQuality);
+                                const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
+                                const embedImg = await pdfDoc.embedJpg(imgBytes);
+                                const page = pdfDoc.addPage([595.28, 841.89]);
+                                const { width, height } = page.getSize();
+                                const imgDims = embedImg.scale(1);
+                                
+                                let drawWidth = width;
+                                let drawHeight = (imgDims.height / imgDims.width) * width;
+                                if (drawHeight > height) {
+                                    drawHeight = height;
+                                    drawWidth = (imgDims.width / imgDims.height) * height;
+                                }
+                                
+                                page.drawImage(embedImg, { x: (width - drawWidth) / 2, y: (height - drawHeight) / 2, width: drawWidth, height: drawHeight, rotate: degrees(item.rotation) });
+                            }
+                        }
+                    }
+
+                    finalPdfBytes = await pdfDoc.save();
+                    const sizeInMB = finalPdfBytes.byteLength / (1024 * 1024);
+
+                    if (targetSizeMB && sizeInMB > targetSizeMB) {
+                        attempts++;
+                        console.log(`Attempt ${attempts}: ${sizeInMB.toFixed(2)}MB > ${targetSizeMB}MB`);
+                    } else {
+                        success = true;
+                    }
+                } 
+
+                download(finalPdfBytes, userFilename + ".pdf", "application/pdf");
+
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred during processing.');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "Merge PDF";
+                loader.classList.add('hidden');
+                compressionMsg.classList.add('hidden');
+            }
+        });
+
+        function download(data, filename, type) {
+            const blob = new Blob([data], { type: type });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
