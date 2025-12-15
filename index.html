@@ -2,7 +2,7 @@
 <html lang="en" class="transition-colors duration-300">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PDF Studio Pro</title>
     
     <!-- Fonts -->
@@ -53,7 +53,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -64,8 +64,8 @@
         /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: #2563eb; margin-top: -6px; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+            background: #2563eb; margin-top: -8px; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px;
@@ -108,34 +108,48 @@
             background-color: rgba(59, 130, 246, 0.05);
             background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%233B82F6' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
         }
+        
+        /* Mobile Safe Area for fixed footer */
+        .safe-area-bottom {
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
     </style>
 </head>
-<body class="bg-[#F8FAFC] dark:bg-dark-bg text-slate-800 dark:text-slate-200 h-screen flex overflow-hidden selection:bg-brand-100 dark:selection:bg-blue-900">
+<!-- Replaced h-screen with min-h-[100dvh] for mobile scrolling support -->
+<body class="bg-[#F8FAFC] dark:bg-dark-bg text-slate-800 dark:text-slate-200 min-h-[100dvh] flex flex-col lg:flex-row lg:h-[100dvh] lg:overflow-hidden selection:bg-brand-100 dark:selection:bg-blue-900">
 
     <!-- Sidebar -->
-    <aside class="w-80 bg-white dark:bg-dark-surface border-r border-slate-200 dark:border-dark-border flex flex-col z-20 shadow-xl shadow-slate-200/50 dark:shadow-none flex-shrink-0">
+    <!-- Changed fixed width w-80 to w-full lg:w-80, removed h-screen -->
+    <aside class="w-full lg:w-80 bg-white dark:bg-dark-surface border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-dark-border flex flex-col z-40 shadow-xl shadow-slate-200/50 dark:shadow-none flex-shrink-0 relative">
         
         <!-- Header -->
-        <div class="p-6 pb-2">
-            <div class="flex items-center gap-3 mb-8">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-glow">
-                    <i class="fa-solid fa-layer-group text-lg"></i>
+        <div class="p-5 lg:p-6 pb-2">
+            <div class="flex items-center justify-between lg:justify-start gap-3 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-glow">
+                        <i class="fa-solid fa-layer-group text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">PDF Studio</h1>
+                        <p class="text-xs text-slate-500 font-medium">Professional Merger</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">PDF Studio</h1>
-                    <p class="text-xs text-slate-500 font-medium">Professional Merger</p>
-                </div>
+                <!-- Mobile Theme Toggle moved to header -->
+                <button id="mobileThemeToggle" class="lg:hidden w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-bg text-slate-500 dark:text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
             </div>
 
             <div class="space-y-6">
-                <!-- File Name Input -->
+                <!-- File Name Input: text-base for mobile to prevent zoom -->
                 <div>
                     <label class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Output Filename</label>
                     <div class="relative group">
-                        <i class="fa-regular fa-file-pdf absolute left-3 top-2.5 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
+                        <i class="fa-regular fa-file-pdf absolute left-3 top-3 lg:top-2.5 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
                         <input type="text" id="filenameInput" value="merged_document" 
-                            class="w-full bg-slate-50 dark:bg-[#252525] border border-slate-200 dark:border-dark-border rounded-xl py-2 pl-9 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-700 dark:text-slate-300">
-                        <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-medium">.pdf</span>
+                            class="w-full bg-slate-50 dark:bg-[#252525] border border-slate-200 dark:border-dark-border rounded-xl py-2.5 lg:py-2 pl-9 pr-12 text-base lg:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-700 dark:text-slate-300">
+                        <span class="absolute right-3 top-3 lg:top-2.5 text-xs text-slate-400 font-medium">.pdf</span>
                     </div>
                 </div>
 
@@ -159,8 +173,7 @@
         </div>
 
         <!-- Scrollable Settings -->
-        <div class="flex-grow overflow-y-auto px-6 py-2">
-            
+        <div class="px-6 py-2 overflow-y-auto lg:flex-grow lg:overflow-y-auto">
             <div class="py-4 border-t border-slate-100 dark:border-dark-border">
                 <label class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-3 block">Quality & Size</label>
                 
@@ -206,20 +219,20 @@
                 <div id="customSizeContainer" class="hidden animate-fade-in-down">
                     <div class="relative">
                         <input type="number" id="targetSizeInput" placeholder="Max File Size (MB)" step="0.1" min="0.1" 
-                            class="w-full bg-white dark:bg-[#252525] border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                            class="w-full bg-white dark:bg-[#252525] border border-slate-200 dark:border-dark-border rounded-xl py-2 px-3 text-base lg:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
                         <span class="absolute right-3 top-2 text-xs text-slate-400 font-medium">MB</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer Actions -->
-        <div class="p-6 border-t border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-[#151515]">
-            <button id="mergeBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] mb-3">
+        <!-- Footer Actions (Fixed on Mobile) -->
+        <div class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#151515]/95 backdrop-blur-md p-4 border-t border-slate-200 dark:border-dark-border lg:static lg:bg-slate-50 lg:dark:bg-[#151515] lg:p-6 lg:z-auto safe-area-bottom shadow-[0_-5px_10px_rgba(0,0,0,0.05)] lg:shadow-none">
+            <button id="mergeBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] mb-1 lg:mb-3">
                 <span id="btnText">Merge & Download</span>
                 <div id="btnLoader" class="loader hidden"></div>
             </button>
-            <div class="flex justify-between items-center px-1">
+            <div class="hidden lg:flex justify-between items-center px-1">
                 <button id="clearBtn" class="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1.5">
                     <i class="fa-solid fa-trash-can"></i> Clear All
                 </button>
@@ -234,54 +247,62 @@
     </aside>
 
     <!-- Main Workspace -->
-    <main class="flex-grow flex flex-col relative overflow-hidden">
+    <!-- Added safe-area-bottom padding so content isn't hidden behind fixed footer on mobile -->
+    <main class="flex-grow flex flex-col relative w-full lg:w-auto overflow-visible lg:overflow-hidden bg-[#F8FAFC] dark:bg-dark-bg pb-[100px] lg:pb-0">
         <!-- Top Shadow Overlay for aesthetics -->
         <div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F8FAFC] to-transparent dark:from-dark-bg z-10 pointer-events-none"></div>
+        
+        <!-- Mobile Clear Button (visible only on mobile) -->
+        <div class="lg:hidden px-6 pt-4 flex justify-end">
+            <button id="mobileClearBtn" class="text-xs font-semibold text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-dark-surface px-3 py-1.5 rounded-full">
+                Clear All
+            </button>
+        </div>
 
-        <div class="flex-grow overflow-y-auto p-8 lg:p-12 relative">
+        <div class="flex-grow p-4 lg:p-12 overflow-visible lg:overflow-y-auto relative">
             <div class="max-w-7xl mx-auto h-full flex flex-col">
                 
                 <!-- Drop Zone -->
-                <div id="dropZone" class="drop-zone group relative w-full h-48 lg:h-56 rounded-[24px] flex flex-col items-center justify-center cursor-pointer mb-10 transition-all hover:bg-white hover:shadow-soft dark:hover:bg-[#1A1A1A]">
+                <div id="dropZone" class="drop-zone group relative w-full h-40 lg:h-56 rounded-[20px] lg:rounded-[24px] flex flex-col items-center justify-center cursor-pointer mb-6 lg:mb-10 transition-all hover:bg-white hover:shadow-soft dark:hover:bg-[#1A1A1A]">
                     <input type="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple accept="image/jpeg,image/png,application/pdf">
                     
-                    <div class="w-16 h-16 rounded-2xl bg-white dark:bg-[#252525] shadow-soft flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand-500"></i>
+                    <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-white dark:bg-[#252525] shadow-soft flex items-center justify-center mb-3 lg:mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border">
+                        <i class="fa-solid fa-cloud-arrow-up text-xl lg:text-2xl text-brand-500"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">Click or Drop files here</h3>
-                    <p class="text-sm text-slate-400">PDF, PNG, JPG supported</p>
+                    <h3 class="text-base lg:text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">Tap to add files</h3>
+                    <p class="text-xs lg:text-sm text-slate-400">PDF, PNG, JPG supported</p>
                 </div>
 
                 <!-- Content Grid -->
-                <div id="fileGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-20">
+                <!-- Adjusted grid for mobile: 2 cols on mobile -->
+                <div id="fileGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-6 pb-20">
                     <!-- Cards will be injected here -->
                 </div>
 
                 <!-- Empty State -->
-                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-center opacity-40 select-none pb-32">
-                    <div class="w-32 h-32 rounded-full bg-slate-100 dark:bg-dark-surface flex items-center justify-center mb-6">
-                        <i class="fa-regular fa-folder-open text-4xl text-slate-300 dark:text-slate-600"></i>
+                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-center opacity-40 select-none pb-20 lg:pb-32 min-h-[200px]">
+                    <div class="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-100 dark:bg-dark-surface flex items-center justify-center mb-4 lg:mb-6">
+                        <i class="fa-regular fa-folder-open text-3xl lg:text-4xl text-slate-300 dark:text-slate-600"></i>
                     </div>
-                    <p class="text-slate-400 font-medium text-lg">Your workspace is empty</p>
-                    <p class="text-slate-300 text-sm mt-2 max-w-xs">Drag documents from your computer to begin merging</p>
+                    <p class="text-slate-400 font-medium text-base lg:text-lg">Your workspace is empty</p>
+                    <p class="text-slate-300 text-xs lg:text-sm mt-2 max-w-xs">Add documents to begin</p>
                 </div>
             </div>
         </div>
 
         <!-- Status Bar / Info -->
-        <div id="compressionMsg" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface border border-brand-100 dark:border-brand-900 shadow-xl rounded-full px-6 py-3 flex items-center gap-3 transform translate-y-20 transition-transform duration-300 z-30">
+        <div id="compressionMsg" class="fixed bottom-[90px] lg:absolute lg:bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface border border-brand-100 dark:border-brand-900 shadow-xl rounded-full px-5 py-2.5 flex items-center gap-3 transform translate-y-40 lg:translate-y-20 transition-transform duration-300 z-30">
             <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Optimizing file size...</span>
+            <span class="text-xs lg:text-sm font-medium text-slate-700 dark:text-slate-200">Optimizing...</span>
         </div>
     </main>
 
     <!-- Crop Modal -->
-    <div id="cropModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
+    <div id="cropModal" class="fixed inset-0 z-[60] hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 lg:p-6">
         <div class="bg-white dark:bg-dark-surface rounded-3xl shadow-2xl w-full max-w-5xl flex flex-col h-[85vh] overflow-hidden border border-white/20">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-dark-border flex justify-between items-center bg-white dark:bg-dark-surface z-10">
+            <div class="px-5 py-3 lg:px-6 lg:py-4 border-b border-slate-100 dark:border-dark-border flex justify-between items-center bg-white dark:bg-dark-surface z-10">
                 <div>
-                    <h3 class="font-bold text-lg text-slate-900 dark:text-white">Crop Image</h3>
-                    <p class="text-xs text-slate-500">Adjust the frame to crop your image</p>
+                    <h3 class="font-bold text-base lg:text-lg text-slate-900 dark:text-white">Crop Image</h3>
                 </div>
                 <button onclick="closeCropModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark text-slate-500"></i>
@@ -290,9 +311,9 @@
             <div class="flex-grow bg-[#0F0F0F] relative overflow-hidden flex items-center justify-center">
                 <img id="cropImageTarget" src="" class="max-w-full max-h-full block">
             </div>
-            <div class="p-6 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface flex justify-end gap-3 z-10">
-                <button onclick="closeCropModal()" class="px-5 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-dark-bg transition-colors">Cancel</button>
-                <button onclick="applyCrop()" class="px-8 py-2.5 rounded-xl text-sm text-white bg-brand-600 font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5">Apply Crop</button>
+            <div class="p-4 lg:p-6 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface flex justify-end gap-3 z-10">
+                <button onclick="closeCropModal()" class="px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-dark-bg transition-colors">Cancel</button>
+                <button onclick="applyCrop()" class="px-5 py-2 lg:px-8 lg:py-2.5 rounded-xl text-sm text-white bg-brand-600 font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5">Apply</button>
             </div>
         </div>
     </div>
@@ -300,7 +321,13 @@
     <script>
         // --- Dark Mode Logic ---
         const themeToggle = document.getElementById('themeToggle');
+        const mobileThemeToggle = document.getElementById('mobileThemeToggle');
         const html = document.documentElement;
+
+        function toggleTheme() {
+            html.classList.toggle('dark');
+            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+        }
 
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             html.classList.add('dark');
@@ -308,10 +335,8 @@
             html.classList.remove('dark');
         }
 
-        themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
-        });
+        themeToggle.addEventListener('click', toggleTheme);
+        mobileThemeToggle.addEventListener('click', toggleTheme);
 
         // --- Core App State ---
         let files = []; 
@@ -347,11 +372,14 @@
             });
         });
 
-        // --- Drag & Drop ---
+        // --- Drag & Drop (Enhanced for Touch) ---
         new Sortable(fileGrid, {
             animation: 200,
             ghostClass: 'opacity-40',
             dragClass: 'cursor-grabbing',
+            delay: 150, // Slight delay to prevent accidental dragging while scrolling on mobile
+            delayOnTouchOnly: true,
+            touchStartThreshold: 3,
             onEnd: (evt) => {
                 const movedItem = files.splice(evt.oldIndex, 1)[0];
                 files.splice(evt.newIndex, 0, movedItem);
@@ -440,47 +468,47 @@
             if (files.length === 0) {
                 emptyState.classList.remove('hidden');
                 dropZone.classList.remove('h-40');
-                dropZone.classList.add('h-48', 'lg:h-56'); // Larger dropzone when empty
+                dropZone.classList.add('h-40', 'lg:h-56');
                 return;
             }
             emptyState.classList.add('hidden');
-            dropZone.classList.remove('h-48', 'lg:h-56');
-            dropZone.classList.add('h-32'); // Smaller dropzone when files exist
+            dropZone.classList.remove('h-40', 'lg:h-56');
+            dropZone.classList.add('h-24', 'lg:h-32'); // Compact dropzone when content exists
 
             files.forEach((item) => {
                 const div = document.createElement('div');
-                div.className = 'group relative bg-white dark:bg-dark-surface rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border overflow-hidden h-64 flex flex-col select-none cursor-grab active:cursor-grabbing';
+                div.className = 'group relative bg-white dark:bg-dark-surface rounded-xl lg:rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border overflow-hidden h-48 lg:h-64 flex flex-col select-none cursor-grab active:cursor-grabbing';
                 div.setAttribute('data-id', item.id);
 
                 const isImg = item.type === 'img';
                 
                 div.innerHTML = `
-                    <div class="relative h-44 bg-slate-50 dark:bg-[#151515] flex items-center justify-center overflow-hidden p-4">
+                    <div class="relative h-32 lg:h-44 bg-slate-50 dark:bg-[#151515] flex items-center justify-center overflow-hidden p-3 lg:p-4">
                         <img src="${item.preview}" class="object-contain w-full h-full shadow-lg rounded-sm transition-transform duration-300" 
                              style="transform: rotate(${item.rotation}deg)">
                         
-                        <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
-                            <button onclick="rotateFile('${item.id}')" class="w-10 h-10 bg-white/20 hover:bg-white text-white hover:text-slate-900 rounded-full backdrop-blur-md transition-all flex items-center justify-center" title="Rotate">
-                                <i class="fa-solid fa-rotate-right"></i>
+                        <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 lg:gap-3 backdrop-blur-[2px]">
+                            <button onclick="rotateFile('${item.id}')" class="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 hover:bg-white text-white hover:text-slate-900 rounded-full backdrop-blur-md transition-all flex items-center justify-center" title="Rotate">
+                                <i class="fa-solid fa-rotate-right text-sm lg:text-base"></i>
                             </button>
                             ${isImg ? `
-                            <button onclick="initCrop('${item.id}')" class="w-10 h-10 bg-white/20 hover:bg-white text-white hover:text-slate-900 rounded-full backdrop-blur-md transition-all flex items-center justify-center" title="Crop">
-                                <i class="fa-solid fa-crop-simple"></i>
+                            <button onclick="initCrop('${item.id}')" class="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 hover:bg-white text-white hover:text-slate-900 rounded-full backdrop-blur-md transition-all flex items-center justify-center" title="Crop">
+                                <i class="fa-solid fa-crop-simple text-sm lg:text-base"></i>
                             </button>` : ''}
                         </div>
                     </div>
-                    <div class="p-4 bg-white dark:bg-dark-surface flex justify-between items-start flex-grow">
+                    <div class="p-3 lg:p-4 bg-white dark:bg-dark-surface flex justify-between items-start flex-grow">
                         <div class="w-full">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">${item.type}</span>
-                                <button onclick="removeFile('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                                    <i class="fa-solid fa-trash-can"></i>
+                            <div class="flex items-center justify-between mb-0.5 lg:mb-1">
+                                <span class="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">${item.type}</span>
+                                <button onclick="removeFile('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors p-1 -mr-1">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
                                 </button>
                             </div>
-                            <div class="truncate text-xs font-semibold text-slate-700 dark:text-slate-200" title="${item.file.name}">
+                            <div class="truncate text-[10px] lg:text-xs font-semibold text-slate-700 dark:text-slate-200" title="${item.file.name}">
                                 ${item.file.name}
                             </div>
-                            <div class="text-[10px] text-slate-400 mt-0.5">
+                            <div class="text-[9px] lg:text-[10px] text-slate-400 mt-0.5">
                                 ${(item.file.size / 1024 / 1024).toFixed(2)} MB
                             </div>
                         </div>
@@ -504,12 +532,15 @@
             renderGrid();
         };
 
-        document.getElementById('clearBtn').addEventListener('click', () => {
+        const clearAll = () => {
             if (files.length > 0 && confirm('Clear all files?')) {
                 files = [];
                 renderGrid();
             }
-        });
+        };
+
+        document.getElementById('clearBtn').addEventListener('click', clearAll);
+        document.getElementById('mobileClearBtn').addEventListener('click', clearAll);
 
         // --- Cropping ---
         window.initCrop = (id) => {
@@ -581,7 +612,7 @@
 
                 while (attempts < MAX_ATTEMPTS && !success) {
                     if (targetSizeMB && attempts > 0) {
-                        compressionMsg.classList.remove('translate-y-20');
+                        compressionMsg.classList.remove('translate-y-40', 'lg:translate-y-20');
                         currentQuality -= 0.3; 
                         if (currentQuality < 0.2) currentQuality = 0.2;
                     }
@@ -685,7 +716,7 @@
                 btn.disabled = false;
                 btnText.textContent = "Merge & Download";
                 loader.classList.add('hidden');
-                compressionMsg.classList.add('translate-y-20');
+                compressionMsg.classList.add('translate-y-40', 'lg:translate-y-20');
             }
         });
 
