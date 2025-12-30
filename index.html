@@ -49,7 +49,7 @@
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
@@ -133,10 +133,10 @@
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
 
-    <!-- Sidebar (Off-canvas on mobile, fixed on desktop) -->
+    <!-- Sidebar -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 lg:w-80 bg-white dark:bg-dark-surface border-r border-slate-200 dark:border-dark-border flex flex-col shadow-2xl lg:shadow-xl lg:shadow-slate-200/50 dark:shadow-none transform transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static flex-shrink-0">
         
-        <!-- Header (Desktop Logo / Mobile Close) -->
+        <!-- Header -->
         <div class="p-5 lg:p-6 pb-2 flex-shrink-0">
             <div class="flex items-center justify-between mb-6">
                 <!-- Desktop Logo -->
@@ -169,23 +169,35 @@
                     </div>
                 </div>
 
-                <!-- ID Mode Toggle -->
-                <div class="bg-slate-50 dark:bg-[#252525] p-3 rounded-xl border border-slate-200 dark:border-dark-border flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-                            <i class="fa-regular fa-id-card text-xs"></i>
+                <!-- ID Mode Toggle & Settings -->
+                <div class="bg-slate-50 dark:bg-[#252525] rounded-xl border border-slate-200 dark:border-dark-border overflow-hidden">
+                    <div class="p-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+                                <i class="fa-regular fa-id-card text-xs"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">ID Card Mode</span>
+                                <span class="text-[10px] text-slate-400">Merge first 2 items</span>
+                            </div>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">ID Card Mode</span>
-                            <span class="text-[10px] text-slate-400">Merge first 2 items</span>
-                        </div>
+                        
+                        <!-- Fixed Toggle Switch -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="idModeToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+                        </label>
                     </div>
-                    
-                    <!-- Fixed Toggle Switch -->
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="idModeToggle" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
-                    </label>
+
+                    <!-- ID Card Scale Selector -->
+                    <div id="idScaleSettings" class="hidden px-3 pb-3 pt-1 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface/50">
+                        <label class="text-[10px] font-semibold text-slate-400 mb-2 block">Card Scale</label>
+                        <select id="idScaleSelect" class="w-full text-xs bg-slate-50 dark:bg-dark-bg border border-slate-200 dark:border-dark-border rounded-lg px-2 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                            <option value="auto">Card Size (Approx)</option>
+                            <option value="medium">Large (Half Page)</option>
+                            <option value="full">Max Width (Full Page)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,7 +245,7 @@
                     </button>
                 </div>
 
-                <!-- Custom Size Input (Hidden) -->
+                <!-- Custom Size Input -->
                 <div id="customSizeContainer" class="hidden animate-fade-in-down">
                     <div class="relative">
                         <input type="number" id="targetSizeInput" placeholder="Max File Size (MB)" step="0.1" min="0.1" 
@@ -244,9 +256,8 @@
             </div>
         </div>
 
-        <!-- Footer Actions (Desktop Only Sidebar Part) -->
+        <!-- Footer Actions -->
         <div class="hidden lg:block p-6 border-t border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-[#151515]">
-            <!-- Desktop Merge Button is inside sidebar in this design to keep everything in one column on left -->
             <button id="desktopMergeBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] mb-3">
                 <span class="btnText">Merge & Download</span>
                 <div class="loader hidden"></div>
@@ -267,7 +278,7 @@
 
     <!-- Main Workspace -->
     <main class="flex-grow flex flex-col relative w-full lg:w-auto overflow-visible lg:overflow-hidden bg-[#F8FAFC] dark:bg-dark-bg pb-[100px] lg:pb-0">
-        <!-- Top Shadow Overlay for aesthetics -->
+        <!-- Top Shadow Overlay -->
         <div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F8FAFC] to-transparent dark:from-dark-bg z-10 pointer-events-none"></div>
         
         <!-- Mobile Clear Button -->
@@ -307,7 +318,7 @@
             </div>
         </div>
 
-        <!-- Mobile Fixed Footer (Merge Button) -->
+        <!-- Mobile Fixed Footer -->
         <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#151515]/95 backdrop-blur-md p-4 border-t border-slate-200 dark:border-dark-border lg:hidden safe-area-bottom shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
             <button id="mobileMergeBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
                 <span class="btnText">Merge & Download</span>
@@ -315,7 +326,7 @@
             </button>
         </div>
 
-        <!-- Status Bar / Info -->
+        <!-- Status Bar -->
         <div id="compressionMsg" class="fixed bottom-[90px] lg:absolute lg:bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface border border-brand-100 dark:border-brand-900 shadow-xl rounded-full px-5 py-2.5 flex items-center gap-3 transform translate-y-40 lg:translate-y-20 transition-transform duration-300 z-30">
             <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
             <span class="text-xs lg:text-sm font-medium text-slate-700 dark:text-slate-200">Optimizing...</span>
@@ -368,13 +379,14 @@
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const idModeToggle = document.getElementById('idModeToggle');
+        const idScaleSettings = document.getElementById('idScaleSettings');
 
         function toggleSidebar() {
             const isClosed = sidebar.classList.contains('-translate-x-full');
             if (isClosed) {
                 sidebar.classList.remove('-translate-x-full');
                 sidebarOverlay.classList.remove('hidden');
-                // slight delay for opacity transition
                 setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
             } else {
                 sidebar.classList.add('-translate-x-full');
@@ -386,13 +398,21 @@
         mobileMenuBtn.addEventListener('click', toggleSidebar);
         closeSidebarBtn.addEventListener('click', toggleSidebar);
         sidebarOverlay.addEventListener('click', toggleSidebar);
+        
+        idModeToggle.addEventListener('change', () => {
+            if(idModeToggle.checked) {
+                idScaleSettings.classList.remove('hidden');
+            } else {
+                idScaleSettings.classList.add('hidden');
+            }
+        });
 
 
         // --- Core App State ---
         let files = []; 
         let currentCropId = null;
         let cropper = null;
-        let currentQualityMode = 'medium'; // small, medium, best, custom
+        let currentQualityMode = 'medium'; 
 
         // --- DOM Elements ---
         const dropZone = document.getElementById('dropZone');
@@ -403,6 +423,7 @@
         const customSizeContainer = document.getElementById('customSizeContainer');
         const filenameInput = document.getElementById('filenameInput');
         const compressionMsg = document.getElementById('compressionMsg');
+        const idScaleSelect = document.getElementById('idScaleSelect');
 
         // --- Quality Preset Logic ---
         const presetBtns = document.querySelectorAll('.quality-option');
@@ -422,7 +443,7 @@
             });
         });
 
-        // --- Drag & Drop (Enhanced for Touch) ---
+        // --- Drag & Drop ---
         new Sortable(fileGrid, {
             animation: 200,
             ghostClass: 'opacity-40',
@@ -630,11 +651,34 @@
         // --- PDF Merging & Compression Logic ---
         const { PDFDocument, rgb, degrees } = PDFLib;
 
-        // Shared merge function for both buttons
+        // Helper: Draw image rotated around center
+        // Using standard rotation matrix logic for CCW rotation (pdf-lib standard)
+        // x' = x cos - y sin, y' = x sin + y cos
+        // We translate the anchor to keep center at (center_x, center_y)
+        const drawImageCentered = (page, image, opts) => {
+            const { width, height, rotate, center_x, center_y } = opts;
+            const angle = rotate.angle; 
+            const rad = (angle * Math.PI) / 180;
+            
+            const w2 = width / 2;
+            const h2 = height / 2;
+            
+            // Standard Rotation Matrix logic for offset
+            const rotOffsetX = w2 * Math.cos(rad) - h2 * Math.sin(rad);
+            const rotOffsetY = w2 * Math.sin(rad) + h2 * Math.cos(rad);
+            
+            page.drawImage(image, {
+                x: center_x - rotOffsetX,
+                y: center_y - rotOffsetY,
+                width: width,
+                height: height,
+                rotate: rotate
+            });
+        }
+
         async function handleMerge() {
             if (files.length === 0) return alert('Please add files first.');
 
-            // Get active button based on visibility (mobile or desktop)
             const isMobile = window.innerWidth < 1024;
             const btn = isMobile ? document.getElementById('mobileMergeBtn') : document.getElementById('desktopMergeBtn');
             const btnText = btn.querySelector('.btnText');
@@ -649,9 +693,9 @@
             try {
                 // Determine Mode parameters
                 const isIdMode = document.getElementById('idModeToggle').checked;
+                const idScaleMode = idScaleSelect.value;
                 const targetSizeMB = (currentQualityMode === 'custom') ? parseFloat(targetSizeInput.value) : null;
                 
-                // Map presets
                 let initialQuality = 0.8;
                 if (currentQualityMode === 'small') initialQuality = 0.3;
                 if (currentQualityMode === 'medium') initialQuality = 0.6;
@@ -701,51 +745,103 @@
                         const pageWidth = page.getWidth();
                         const pageHeight = page.getHeight();
                         const targets = files.slice(0, 2);
-                        let yPos = pageHeight / 2 + 50; 
+                        
+                        let targetW = 250; 
+                        let targetH = 250; 
+                        if (idScaleMode === 'medium') { targetW = pageWidth * 0.8; targetH = pageHeight * 0.4; }
+                        if (idScaleMode === 'full') { targetW = pageWidth * 0.9; targetH = pageHeight * 0.45; }
 
-                        for (const item of targets) {
+                        for (let i = 0; i < targets.length; i++) {
+                            const item = targets[i];
+                            let embedImg;
+                            let dims;
+
+                            // UI Rotation is Clockwise (0, 90, 180, 270)
+                            // pdf-lib drawImage rotate is Counter-Clockwise. 
+                            // So we pass -item.rotation.
+                            const drawRotation = degrees(-item.rotation);
+
                             if (item.type === 'pdf') {
                                 const thumb = await generatePdfThumbnail(item.file);
                                 const imgBytes = await fetch(thumb).then(res => res.arrayBuffer());
-                                const embedImg = await pdfDoc.embedPng(imgBytes);
-                                const dims = embedImg.scaleToFit(250, 250);
-                                page.drawImage(embedImg, { x: (pageWidth - dims.width) / 2, y: yPos, width: dims.width, height: dims.height });
+                                embedImg = await pdfDoc.embedPng(imgBytes);
                             } else {
                                 const compressedDataUrl = await compressImage(item.file, currentQuality);
                                 const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
-                                const embedImg = await pdfDoc.embedJpg(imgBytes);
-                                const dims = embedImg.scaleToFit(250, 250);
-                                page.drawImage(embedImg, { x: (pageWidth - dims.width) / 2, y: yPos, width: dims.width, height: dims.height, rotate: degrees(item.rotation) });
+                                embedImg = await pdfDoc.embedJpg(imgBytes);
                             }
-                            yPos -= 300;
+                            
+                            dims = embedImg.scaleToFit(targetW, targetH);
+                            
+                            let itemCenterY;
+                            if (targets.length === 1) {
+                                itemCenterY = pageHeight / 2;
+                            } else {
+                                if (i === 0) itemCenterY = (pageHeight * 3) / 4;
+                                else itemCenterY = pageHeight / 4;
+                            }
+
+                            drawImageCentered(page, embedImg, {
+                                center_x: pageWidth / 2,
+                                center_y: itemCenterY,
+                                width: dims.width,
+                                height: dims.height,
+                                rotate: drawRotation
+                            });
                         }
                     } else {
+                        // Standard Mode
                         for (const item of files) {
                             if (item.type === 'pdf') {
                                 const arrayBuffer = await item.file.arrayBuffer();
                                 const srcPdf = await PDFDocument.load(arrayBuffer);
                                 const copiedPages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
                                 copiedPages.forEach((page) => {
-                                    const existingRotation = page.getRotation().angle;
-                                    page.setRotation(degrees(existingRotation + item.rotation));
+                                    const existingRotation = page.getRotation().angle || 0;
+                                    // PDF Page Rotate is Clockwise. UI is Clockwise.
+                                    const newRotation = (existingRotation + item.rotation) % 360;
+                                    page.setRotation(degrees(newRotation));
                                     pdfDoc.addPage(page);
                                 });
                             } else {
                                 const compressedDataUrl = await compressImage(item.file, currentQuality);
                                 const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
                                 const embedImg = await pdfDoc.embedJpg(imgBytes);
-                                const page = pdfDoc.addPage([595.28, 841.89]);
-                                const { width, height } = page.getSize();
-                                const imgDims = embedImg.scale(1);
                                 
-                                let drawWidth = width;
-                                let drawHeight = (imgDims.height / imgDims.width) * width;
-                                if (drawHeight > height) {
-                                    drawHeight = height;
-                                    drawWidth = (imgDims.width / imgDims.height) * height;
-                                }
+                                // --- Adaptive Page Orientation Logic ---
+                                // Check if rotated 90 or 270 degrees
+                                const isRotated = item.rotation % 180 !== 0;
                                 
-                                page.drawImage(embedImg, { x: (width - drawWidth) / 2, y: (height - drawHeight) / 2, width: drawWidth, height: drawHeight, rotate: degrees(item.rotation) });
+                                // A4 Dimensions
+                                const pW = 595.28;
+                                const pH = 841.89;
+
+                                // If rotated, we create a Landscape page
+                                const pageWidth = isRotated ? pH : pW;  
+                                const pageHeight = isRotated ? pW : pH;
+                                
+                                const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                                
+                                // Calculate scale based on effective dimensions
+                                // If rotated, effective width is height, etc.
+                                const effectiveImgWidth = isRotated ? embedImg.height : embedImg.width;
+                                const effectiveImgHeight = isRotated ? embedImg.width : embedImg.height;
+                                
+                                const scaleX = pageWidth / effectiveImgWidth;
+                                const scaleY = pageHeight / effectiveImgHeight;
+                                const scale = Math.min(scaleX, scaleY); // Fit entirely within page
+                                
+                                const drawWidth = embedImg.width * scale;
+                                const drawHeight = embedImg.height * scale;
+                                
+                                // Pass negative rotation for images (CCW)
+                                drawImageCentered(page, embedImg, {
+                                    center_x: pageWidth / 2,
+                                    center_y: pageHeight / 2,
+                                    width: drawWidth,
+                                    height: drawHeight,
+                                    rotate: degrees(-item.rotation)
+                                });
                             }
                         }
                     }
