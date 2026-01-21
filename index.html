@@ -102,7 +102,7 @@
 
     <!-- Version Number (Mobile Only) -->
     <div class="lg:hidden fixed bottom-2 left-2 z-50 text-[10px] text-slate-300 dark:text-slate-700 font-mono pointer-events-none">
-        v1.0.9
+        v1.0.10
     </div>
 
     <!-- Mobile Header -->
@@ -258,7 +258,7 @@
                 <button id="clearBtn" class="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1.5">
                     <i class="fa-solid fa-trash-can"></i> Clear All
                 </button>
-                <span class="text-[10px] text-slate-300 dark:text-slate-600 font-mono select-none">v1.0.9</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono select-none">v1.0.10</span>
                 <button id="themeToggle" class="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5">
                     <i class="fa-solid fa-moon dark:hidden"></i>
                     <i class="fa-solid fa-sun hidden dark:block"></i>
@@ -575,8 +575,7 @@
             if (isPdf) {
                 preview = await generatePdfThumbnail(file);
             } else {
-                // For images, generate a downscaled preview for the grid to avoid 
-                // crashing the UI/DOM with massive Data URLs
+                // Generate a safe thumbnail from Blob URL (avoid base64 for large files)
                 preview = await generateImageThumbnail(file, 1500); 
             }
 
@@ -598,30 +597,32 @@
             });
         }
         
-        // NEW: Safe thumbnail generation for UI
+        // NEW: Safe thumbnail generation for UI using ObjectURL
         async function generateImageThumbnail(file, maxDim) {
             return new Promise((resolve) => {
+                const url = URL.createObjectURL(file);
                 const img = new Image();
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.onload = () => {
-                        let w = img.width;
-                        let h = img.height;
-                        if (w > maxDim || h > maxDim) {
-                            const ratio = Math.min(maxDim / w, maxDim / h);
-                            w *= ratio;
-                            h *= ratio;
-                        }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = w;
-                        canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
-                    };
-                    img.src = e.target.result;
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        const ratio = Math.min(maxDim / w, maxDim / h);
+                        w *= ratio;
+                        h *= ratio;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
                 };
-                reader.readAsDataURL(file);
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    resolve('');
+                };
+                img.src = url;
             });
         }
 
@@ -731,14 +732,21 @@
         document.getElementById('mobileClearBtn').addEventListener('click', clearAll);
 
         // --- Cropping ---
-        window.initCrop = (id) => {
+        window.initCrop = async (id) => {
             currentCropId = id;
             const item = files.find(f => f.id === id);
             if (!item || item.type !== 'img') return;
+            
             const modal = document.getElementById('cropModal');
             const imageTarget = document.getElementById('cropImageTarget');
-            imageTarget.src = item.preview;
+            
+            // Generate a safe-to-display version of the original file for cropping
+            // This prevents loading massive 12MB images directly into the DOM which crashes iOS
+            const safeUrl = await generateImageThumbnail(item.file, 2500); 
+            
+            imageTarget.src = safeUrl;
             modal.classList.remove('hidden');
+            
             if (cropper) cropper.destroy();
             cropper = new Cropper(imageTarget, { viewMode: 1, autoCropArea: 0.8, background: false });
         };
@@ -799,38 +807,39 @@
 
         const compressImage = async (file, q, scaleFactor) => {
             return new Promise((resolve) => {
+                const url = URL.createObjectURL(file);
                 const img = new Image();
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.onload = () => {
-                        // IOS/Mobile Canvas Limit Safety: Reduced to 2500px to prevent black squares
-                        const MAX_DIM = 2500;
-                        let w = img.width * scaleFactor;
-                        let h = img.height * scaleFactor;
-                        
-                        if (w > MAX_DIM || h > MAX_DIM) {
-                            const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
-                            w *= ratio;
-                            h *= ratio;
-                        }
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    // IOS/Mobile Canvas Limit Safety: Reduced to 2500px to prevent black squares
+                    const MAX_DIM = 2500;
+                    let w = img.width * scaleFactor;
+                    let h = img.height * scaleFactor;
+                    
+                    if (w > MAX_DIM || h > MAX_DIM) {
+                        const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                        w *= ratio;
+                        h *= ratio;
+                    }
 
-                        const canvas = document.createElement('canvas');
-                        canvas.width = Math.floor(w);
-                        canvas.height = Math.floor(h);
-                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                        
-                        // Fill white background to prevent black squares on transparency
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        
-                        // Draw at exact integer dimensions
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', q));
-                    };
-                    img.onerror = () => resolve(e.target.result); // Fallback to original if load fails
-                    img.src = e.target.result; 
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.floor(w);
+                    canvas.height = Math.floor(h);
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    
+                    // Fill white background to prevent black squares on transparency
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw at exact integer dimensions
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', q));
                 };
-                reader.readAsDataURL(file);
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    resolve('');
+                };
+                img.src = url; 
             });
         };
 
