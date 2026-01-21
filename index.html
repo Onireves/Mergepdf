@@ -49,7 +49,7 @@
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
@@ -60,17 +60,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .dark ::-webkit-scrollbar-thumb { background: #333; }
-
-        /* Custom Range Slider */
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
-            background: #2563eb; margin-top: -8px; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px;
-        }
-        .dark input[type=range]::-webkit-slider-runnable-track { background: #333; }
 
         /* Spinner */
         .loader {
@@ -111,7 +100,7 @@
 </head>
 <body class="bg-[#F8FAFC] dark:bg-dark-bg text-slate-800 dark:text-slate-200 min-h-[100dvh] flex flex-col lg:flex-row lg:h-[100dvh] lg:overflow-hidden selection:bg-brand-100 dark:selection:bg-blue-900">
 
-    <!-- Mobile Header (Visible only on lg:hidden) -->
+    <!-- Mobile Header -->
     <div class="lg:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-surface border-b border-slate-200 dark:border-dark-border z-30 sticky top-0 shadow-sm">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-glow">
@@ -177,19 +166,17 @@
                                 <i class="fa-regular fa-id-card text-xs"></i>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">ID Card Mode</span>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">ID Card</span>
                                 <span class="text-[10px] text-slate-400">Merge first 2 items</span>
                             </div>
                         </div>
                         
-                        <!-- Fixed Toggle Switch -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="idModeToggle" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
                         </label>
                     </div>
 
-                    <!-- ID Card Scale Selector -->
                     <div id="idScaleSettings" class="hidden px-3 pb-3 pt-1 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface/50">
                         <label class="text-[10px] font-semibold text-slate-400 mb-2 block">Card Scale</label>
                         <select id="idScaleSelect" class="w-full text-xs bg-slate-50 dark:bg-dark-bg border border-slate-200 dark:border-dark-border rounded-lg px-2 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500">
@@ -223,7 +210,7 @@
                             <div class="w-2 h-2 rounded-full bg-slate-200 group-[.active]:bg-brand-500"></div>
                         </div>
                         <div class="text-xs font-semibold">Best</div>
-                        <div class="text-[10px] text-slate-400 opacity-80">Max Quality</div>
+                        <div class="text-[10px] text-slate-400 opacity-80">Lossless Copy</div>
                     </button>
 
                     <button class="quality-option p-3 rounded-xl border border-slate-200 dark:border-dark-border bg-white dark:bg-[#252525] text-left hover:border-brand-300 transition-all group" data-value="small">
@@ -232,7 +219,7 @@
                             <div class="w-2 h-2 rounded-full bg-slate-200 group-[.active]:bg-brand-500"></div>
                         </div>
                         <div class="text-xs font-semibold">Smallest</div>
-                        <div class="text-[10px] text-slate-400 opacity-80">Email ready</div>
+                        <div class="text-[10px] text-slate-400 opacity-80">Compress All</div>
                     </button>
 
                     <button class="quality-option p-3 rounded-xl border border-slate-200 dark:border-dark-border bg-white dark:bg-[#252525] text-left hover:border-brand-300 transition-all group" data-value="custom">
@@ -276,26 +263,30 @@
         </div>
     </aside>
 
-    <!-- Main Workspace -->
-    <main class="flex-grow flex flex-col relative w-full lg:w-auto overflow-visible lg:overflow-hidden bg-[#F8FAFC] dark:bg-dark-bg pb-[100px] lg:pb-0">
-        <!-- Top Shadow Overlay -->
-        <div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F8FAFC] to-transparent dark:from-dark-bg z-10 pointer-events-none"></div>
+    <!-- Main Workspace with Split View for Preview -->
+    <main class="flex-grow flex flex-col lg:flex-row relative w-full lg:w-auto overflow-hidden bg-[#F8FAFC] dark:bg-dark-bg">
         
-        <!-- Mobile Clear Button -->
-        <div class="lg:hidden px-6 pt-4 flex justify-end">
-            <button id="mobileClearBtn" class="text-xs font-semibold text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-dark-surface px-3 py-1.5 rounded-full">
-                Clear All
-            </button>
-        </div>
+        <!-- Files Area -->
+        <div class="flex-grow flex flex-col relative h-full overflow-hidden lg:w-3/5 xl:w-2/3">
+            <!-- Top Shadow Overlay -->
+            <div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F8FAFC] to-transparent dark:from-dark-bg z-10 pointer-events-none"></div>
+            
+            <!-- Mobile Controls -->
+            <div class="lg:hidden px-4 pt-4 flex justify-between items-center">
+                <button id="mobilePreviewToggleBtn" class="text-xs font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <i class="fa-regular fa-eye"></i> Preview
+                </button>
+                <button id="mobileClearBtn" class="text-xs font-semibold text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-dark-surface px-3 py-1.5 rounded-full">
+                    Clear All
+                </button>
+            </div>
 
-        <div class="flex-grow p-4 lg:p-12 overflow-visible lg:overflow-y-auto relative">
-            <div class="max-w-7xl mx-auto h-full flex flex-col">
-                
+            <div class="flex-grow p-4 lg:p-8 overflow-y-auto pb-[100px] lg:pb-8">
                 <!-- Drop Zone -->
-                <div id="dropZone" class="drop-zone group relative w-full h-40 lg:h-56 rounded-[20px] lg:rounded-[24px] flex flex-col items-center justify-center cursor-pointer mb-6 lg:mb-10 transition-all hover:bg-white hover:shadow-soft dark:hover:bg-[#1A1A1A]">
+                <div id="dropZone" class="drop-zone group relative w-full h-40 lg:h-48 rounded-[20px] lg:rounded-[24px] flex flex-col items-center justify-center cursor-pointer mb-6 lg:mb-8 transition-all hover:bg-white hover:shadow-soft dark:hover:bg-[#1A1A1A]">
                     <input type="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple accept="image/jpeg,image/png,application/pdf">
                     
-                    <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-white dark:bg-[#252525] shadow-soft flex items-center justify-center mb-3 lg:mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border">
+                    <div class="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-white dark:bg-[#252525] shadow-soft flex items-center justify-center mb-3 lg:mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 border border-slate-100 dark:border-dark-border">
                         <i class="fa-solid fa-cloud-arrow-up text-xl lg:text-2xl text-brand-500"></i>
                     </div>
                     <h3 class="text-base lg:text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">Tap to add files</h3>
@@ -303,12 +294,12 @@
                 </div>
 
                 <!-- Content Grid -->
-                <div id="fileGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-6 pb-20">
+                <div id="fileGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
                     <!-- Cards will be injected here -->
                 </div>
 
                 <!-- Empty State -->
-                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-center opacity-40 select-none pb-20 lg:pb-32 min-h-[200px]">
+                <div id="emptyState" class="flex flex-col items-center justify-center text-center opacity-40 select-none py-12 lg:py-20">
                     <div class="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-100 dark:bg-dark-surface flex items-center justify-center mb-4 lg:mb-6">
                         <i class="fa-regular fa-folder-open text-3xl lg:text-4xl text-slate-300 dark:text-slate-600"></i>
                     </div>
@@ -318,18 +309,48 @@
             </div>
         </div>
 
+        <!-- Live Preview Panel (Desktop) -->
+        <div class="hidden lg:flex flex-col w-2/5 xl:w-1/3 bg-slate-100 dark:bg-[#151515] border-l border-slate-200 dark:border-dark-border h-full">
+            <div class="p-4 border-b border-slate-200 dark:border-dark-border flex justify-between items-center bg-white/50 dark:bg-dark-surface/50 backdrop-blur-md">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Live Preview</span>
+                
+                <!-- Pagination Controls -->
+                <div class="flex items-center gap-2 bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border rounded-lg px-2 py-1 shadow-sm">
+                    <button id="prevPageBtn" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <span id="pageIndicator" class="text-[10px] font-medium text-slate-600 dark:text-slate-300 min-w-[30px] text-center tabular-nums">1 / 1</span>
+                    <button id="nextPageBtn" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow flex items-center justify-center p-6 overflow-hidden relative">
+                <div id="previewContainer" class="shadow-2xl rounded-sm transition-all duration-300">
+                    <!-- Canvas injected here -->
+                    <div id="previewPlaceholder" class="text-slate-400 text-sm">No preview available</div>
+                </div>
+                <!-- Loading Overlay -->
+                <div id="previewLoader" class="absolute inset-0 bg-slate-100/50 dark:bg-[#151515]/50 flex items-center justify-center hidden">
+                    <div class="loader border-slate-400 border-t-brand-500"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Mobile Fixed Footer -->
         <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#151515]/95 backdrop-blur-md p-4 border-t border-slate-200 dark:border-dark-border lg:hidden safe-area-bottom shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-            <button id="mobileMergeBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
-                <span class="btnText">Merge & Download</span>
-                <div class="loader hidden"></div>
-            </button>
+            <div class="flex gap-2">
+                <button id="mobileMergeBtn" class="flex-grow bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
+                    <span class="btnText">Merge & Download</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </div>
         </div>
 
         <!-- Status Bar -->
-        <div id="compressionMsg" class="fixed bottom-[90px] lg:absolute lg:bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface border border-brand-100 dark:border-brand-900 shadow-xl rounded-full px-5 py-2.5 flex items-center gap-3 transform translate-y-40 lg:translate-y-20 transition-transform duration-300 z-30">
+        <div id="compressionMsg" class="fixed bottom-[90px] lg:absolute lg:bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface border border-brand-100 dark:border-brand-900 shadow-xl rounded-full px-5 py-2.5 flex items-center gap-3 transform translate-y-40 lg:translate-y-20 transition-transform duration-300 z-30 pointer-events-none">
             <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
-            <span class="text-xs lg:text-sm font-medium text-slate-700 dark:text-slate-200">Optimizing...</span>
+            <span id="compressionText" class="text-xs lg:text-sm font-medium text-slate-700 dark:text-slate-200">Optimizing...</span>
         </div>
     </main>
 
@@ -351,6 +372,30 @@
                 <button onclick="closeCropModal()" class="px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-dark-bg transition-colors">Cancel</button>
                 <button onclick="applyCrop()" class="px-5 py-2 lg:px-8 lg:py-2.5 rounded-xl text-sm text-white bg-brand-600 font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5">Apply</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Mobile Preview Modal -->
+    <div id="mobilePreviewModal" class="fixed inset-0 z-[60] hidden bg-slate-100 dark:bg-dark-bg flex flex-col">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-dark-border bg-white dark:bg-dark-surface flex justify-between items-center">
+            <h3 class="font-bold text-base text-slate-900 dark:text-white">Live Preview</h3>
+            
+            <div class="flex items-center gap-3">
+                <!-- Mobile Pagination -->
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-dark-bg border border-slate-200 dark:border-dark-border rounded-lg px-2 py-1">
+                    <button id="mobilePrevPageBtn" class="w-6 h-6 flex items-center justify-center rounded text-slate-500 disabled:opacity-30">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <span id="mobilePageIndicator" class="text-[10px] font-medium text-slate-600 dark:text-slate-300 min-w-[30px] text-center tabular-nums">1 / 1</span>
+                    <button id="mobileNextPageBtn" class="w-6 h-6 flex items-center justify-center rounded text-slate-500 disabled:opacity-30">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+                <button id="closeMobilePreview" class="text-sm font-medium text-brand-600 dark:text-brand-400">Done</button>
+            </div>
+        </div>
+        <div class="flex-grow flex items-center justify-center p-4 overflow-auto bg-slate-200 dark:bg-[#111]">
+            <div id="mobilePreviewContainer" class="shadow-2xl"></div>
         </div>
     </div>
 
@@ -405,7 +450,11 @@
             } else {
                 idScaleSettings.classList.add('hidden');
             }
+            triggerPreviewUpdate();
         });
+
+        // Update preview when ID Scale changes
+        document.getElementById('idScaleSelect').addEventListener('change', triggerPreviewUpdate);
 
 
         // --- Core App State ---
@@ -413,6 +462,11 @@
         let currentCropId = null;
         let cropper = null;
         let currentQualityMode = 'medium'; 
+        let previewDebounceTimer;
+        
+        // Preview State
+        let previewPdfDoc = null;
+        let previewPageNum = 1;
 
         // --- DOM Elements ---
         const dropZone = document.getElementById('dropZone');
@@ -423,7 +477,24 @@
         const customSizeContainer = document.getElementById('customSizeContainer');
         const filenameInput = document.getElementById('filenameInput');
         const compressionMsg = document.getElementById('compressionMsg');
+        const compressionText = document.getElementById('compressionText');
         const idScaleSelect = document.getElementById('idScaleSelect');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewLoader = document.getElementById('previewLoader');
+        const mobilePreviewToggleBtn = document.getElementById('mobilePreviewToggleBtn');
+        const mobilePreviewModal = document.getElementById('mobilePreviewModal');
+        const closeMobilePreview = document.getElementById('closeMobilePreview');
+        const mobilePreviewContainer = document.getElementById('mobilePreviewContainer');
+        
+        // Pagination Elements
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageIndicator = document.getElementById('pageIndicator');
+        
+        const mobilePrevPageBtn = document.getElementById('mobilePrevPageBtn');
+        const mobileNextPageBtn = document.getElementById('mobileNextPageBtn');
+        const mobilePageIndicator = document.getElementById('mobilePageIndicator');
 
         // --- Quality Preset Logic ---
         const presetBtns = document.querySelectorAll('.quality-option');
@@ -440,6 +511,7 @@
                     customSizeContainer.classList.add('hidden');
                     targetSizeInput.value = ''; 
                 }
+                triggerPreviewUpdate(); // Re-render preview implies quality might change eventually, but mostly layout here
             });
         });
 
@@ -454,6 +526,7 @@
             onEnd: (evt) => {
                 const movedItem = files.splice(evt.oldIndex, 1)[0];
                 files.splice(evt.newIndex, 0, movedItem);
+                triggerPreviewUpdate();
             },
         });
 
@@ -484,6 +557,7 @@
                 }
             }
             renderGrid();
+            triggerPreviewUpdate();
         }
 
         // --- File Handling ---
@@ -540,11 +614,15 @@
                 emptyState.classList.remove('hidden');
                 dropZone.classList.remove('h-40');
                 dropZone.classList.add('h-40', 'lg:h-56');
+                previewPlaceholder.style.display = 'block';
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(previewPlaceholder);
                 return;
             }
             emptyState.classList.add('hidden');
             dropZone.classList.remove('h-40', 'lg:h-56');
             dropZone.classList.add('h-24', 'lg:h-32'); 
+            previewPlaceholder.style.display = 'none';
 
             files.forEach((item) => {
                 const div = document.createElement('div');
@@ -595,18 +673,21 @@
             if (item) {
                 item.rotation = (item.rotation + 90) % 360;
                 renderGrid();
+                triggerPreviewUpdate();
             }
         };
 
         window.removeFile = (id) => {
             files = files.filter(f => f.id !== id);
             renderGrid();
+            triggerPreviewUpdate();
         };
 
         const clearAll = () => {
             if (files.length > 0 && confirm('Clear all files?')) {
                 files = [];
                 renderGrid();
+                triggerPreviewUpdate();
             }
         };
 
@@ -643,18 +724,15 @@
                     item.file = new File([blob], item.file.name, { type: "image/jpeg" });
                     item.rotation = 0;
                     renderGrid();
+                    triggerPreviewUpdate();
                     closeCropModal();
                 });
             }
         };
 
-        // --- PDF Merging & Compression Logic ---
+        // --- PDF Generation Core ---
         const { PDFDocument, rgb, degrees } = PDFLib;
 
-        // Helper: Draw image rotated around center
-        // Using standard rotation matrix logic for CCW rotation (pdf-lib standard)
-        // x' = x cos - y sin, y' = x sin + y cos
-        // We translate the anchor to keep center at (center_x, center_y)
         const drawImageCentered = (page, image, opts) => {
             const { width, height, rotate, center_x, center_y } = opts;
             const angle = rotate.angle; 
@@ -663,7 +741,6 @@
             const w2 = width / 2;
             const h2 = height / 2;
             
-            // Standard Rotation Matrix logic for offset
             const rotOffsetX = w2 * Math.cos(rad) - h2 * Math.sin(rad);
             const rotOffsetY = w2 * Math.sin(rad) + h2 * Math.cos(rad);
             
@@ -676,6 +753,276 @@
             });
         }
 
+        const compressImage = async (file, q, scaleFactor) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width * scaleFactor;
+                        canvas.height = img.height * scaleFactor;
+                        const ctx = canvas.getContext('2d');
+                        // Fill white background to prevent black squares on transparency
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', q));
+                    };
+                    img.src = e.target.result; // Set src AFTER onload
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        const renderPdfPageToImage = async (file, q, scaleFactor) => {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const page = await pdf.getPage(1); 
+            
+            const viewport = page.getViewport({ scale: 1.5 * scaleFactor });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            // White bg for PDF pages too
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            return canvas.toDataURL('image/jpeg', q);
+        };
+
+        async function createPdf(customQuality = null, customScale = null) {
+            const pdfDoc = await PDFDocument.create();
+            const isIdMode = document.getElementById('idModeToggle').checked;
+            const idScaleMode = document.getElementById('idScaleSelect').value;
+            
+            // Default High Quality if no custom params passed
+            const q = customQuality !== null ? customQuality : 0.85;
+            const s = customScale !== null ? customScale : 1.0;
+            
+            // Check if we need to force compression (e.g. Small mode or Custom)
+            // If customQuality is passed, we are in an optimization loop, so force compression.
+            // If just previewing (customQuality is null), assume high quality copy for speed unless Small is selected.
+            const forceCompression = (customQuality !== null) || (currentQualityMode === 'small');
+
+            if (isIdMode) {
+                const page = pdfDoc.addPage([595.28, 841.89]);
+                const pageWidth = page.getWidth();
+                const pageHeight = page.getHeight();
+                const targets = files.slice(0, 2);
+                
+                let targetW = 250; 
+                let targetH = 250; 
+                if (idScaleMode === 'medium') { targetW = pageWidth * 0.8; targetH = pageHeight * 0.4; }
+                if (idScaleMode === 'full') { targetW = pageWidth * 0.9; targetH = pageHeight * 0.45; }
+
+                for (let i = 0; i < targets.length; i++) {
+                    const item = targets[i];
+                    let embedImg;
+                    
+                    if (item.type === 'pdf' && !forceCompression) {
+                        const thumb = await generatePdfThumbnail(item.file);
+                        const imgBytes = await fetch(thumb).then(res => res.arrayBuffer());
+                        embedImg = await pdfDoc.embedPng(imgBytes);
+                    } else if (item.type === 'pdf' && forceCompression) {
+                        const compressedDataUrl = await renderPdfPageToImage(item.file, q, s);
+                        const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
+                        embedImg = await pdfDoc.embedJpg(imgBytes);
+                    } else {
+                        const compressedDataUrl = await compressImage(item.file, q, s);
+                        const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
+                        embedImg = await pdfDoc.embedJpg(imgBytes);
+                    }
+                    
+                    const drawRotation = degrees(-item.rotation);
+                    const dims = embedImg.scaleToFit(targetW, targetH);
+                    
+                    let itemCenterY;
+                    if (targets.length === 1) itemCenterY = pageHeight / 2;
+                    else if (i === 0) itemCenterY = (pageHeight * 3) / 4;
+                    else itemCenterY = pageHeight / 4;
+
+                    drawImageCentered(page, embedImg, {
+                        center_x: pageWidth / 2,
+                        center_y: itemCenterY,
+                        width: dims.width,
+                        height: dims.height,
+                        rotate: drawRotation
+                    });
+                }
+            } else {
+                for (const item of files) {
+                    if (item.type === 'pdf' && !forceCompression) {
+                        const arrayBuffer = await item.file.arrayBuffer();
+                        const srcPdf = await PDFDocument.load(arrayBuffer);
+                        const copiedPages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
+                        copiedPages.forEach((page) => {
+                            const existingRotation = page.getRotation().angle || 0;
+                            const newRotation = (existingRotation + item.rotation) % 360;
+                            page.setRotation(degrees(newRotation));
+                            pdfDoc.addPage(page);
+                        });
+                    } else {
+                        let compressedDataUrl;
+                        if (item.type === 'pdf') {
+                            compressedDataUrl = await renderPdfPageToImage(item.file, q, s);
+                        } else {
+                            compressedDataUrl = await compressImage(item.file, q, s);
+                        }
+
+                        const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
+                        const embedImg = await pdfDoc.embedJpg(imgBytes);
+                        
+                        const isRotated = item.rotation % 180 !== 0;
+                        const pW = 595.28;
+                        const pH = 841.89;
+                        const pageWidth = isRotated ? pH : pW;  
+                        const pageHeight = isRotated ? pW : pH;
+                        
+                        const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                        
+                        const effectiveImgWidth = isRotated ? embedImg.height : embedImg.width;
+                        const effectiveImgHeight = isRotated ? embedImg.width : embedImg.height;
+                        
+                        const scaleX = pageWidth / effectiveImgWidth;
+                        const scaleY = pageHeight / effectiveImgHeight;
+                        const scale = Math.min(scaleX, scaleY); 
+                        
+                        const drawWidth = embedImg.width * scale;
+                        const drawHeight = embedImg.height * scale;
+                        
+                        drawImageCentered(page, embedImg, {
+                            center_x: pageWidth / 2,
+                            center_y: pageHeight / 2,
+                            width: drawWidth,
+                            height: drawHeight,
+                            rotate: degrees(-item.rotation)
+                        });
+                    }
+                }
+            }
+            return pdfDoc.save();
+        }
+
+        // --- Preview Logic ---
+        function triggerPreviewUpdate() {
+            if (files.length === 0) return;
+            previewLoader.classList.remove('hidden');
+            clearTimeout(previewDebounceTimer);
+            previewDebounceTimer = setTimeout(() => updatePreview(false), 600);
+        }
+
+        async function updatePreview(preservePage = false) {
+            if (files.length === 0) {
+                previewLoader.classList.add('hidden');
+                return;
+            }
+            try {
+                if (!preservePage) {
+                    // Generate PDF with default/high quality for preview (fast)
+                    const pdfBytes = await createPdf(null, null);
+                    // Load document into shared state
+                    previewPdfDoc = await pdfjsLib.getDocument(pdfBytes).promise;
+                    previewPageNum = 1;
+                }
+                
+                await renderPreviewPage();
+                updatePaginationControls();
+
+            } catch (e) {
+                console.error("Preview error", e);
+            } finally {
+                previewLoader.classList.add('hidden');
+            }
+        }
+        
+        async function renderPreviewPage() {
+            if (!previewPdfDoc) return;
+            
+            // Render specific page
+            const page = await previewPdfDoc.getPage(previewPageNum);
+            
+            // Desktop Preview
+            const container = document.getElementById('previewContainer');
+            const viewport = page.getViewport({ scale: 1 });
+            
+            // Scale canvas to container width
+            const containerWidth = container.parentElement.clientWidth - 48; // padding
+            const scale = containerWidth / viewport.width;
+            const scaledViewport = page.getViewport({ scale: scale });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+            canvas.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            canvas.style.borderRadius = '4px';
+
+            await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+            
+            container.innerHTML = '';
+            container.appendChild(canvas);
+            
+            // Clone for mobile modal if open
+            if (!mobilePreviewModal.classList.contains('hidden')) {
+                mobilePreviewContainer.innerHTML = '';
+                const mobileCanvas = canvas.cloneNode();
+                mobileCanvas.getContext('2d').drawImage(canvas, 0, 0);
+                mobilePreviewContainer.appendChild(mobileCanvas);
+            }
+        }
+        
+        function updatePaginationControls() {
+            if (!previewPdfDoc) return;
+            const total = previewPdfDoc.numPages;
+            const text = `${previewPageNum} / ${total}`;
+            
+            pageIndicator.textContent = text;
+            mobilePageIndicator.textContent = text;
+            
+            const isFirst = previewPageNum <= 1;
+            const isLast = previewPageNum >= total;
+            
+            // Desktop
+            prevPageBtn.disabled = isFirst;
+            nextPageBtn.disabled = isLast;
+            
+            // Mobile
+            mobilePrevPageBtn.disabled = isFirst;
+            mobileNextPageBtn.disabled = isLast;
+        }
+        
+        function changePage(delta) {
+            if (!previewPdfDoc) return;
+            const newPage = previewPageNum + delta;
+            if (newPage >= 1 && newPage <= previewPdfDoc.numPages) {
+                previewPageNum = newPage;
+                renderPreviewPage();
+                updatePaginationControls();
+            }
+        }
+        
+        // Listeners
+        prevPageBtn.addEventListener('click', () => changePage(-1));
+        nextPageBtn.addEventListener('click', () => changePage(1));
+        mobilePrevPageBtn.addEventListener('click', () => changePage(-1));
+        mobileNextPageBtn.addEventListener('click', () => changePage(1));
+
+        // --- Mobile Preview Controls ---
+        mobilePreviewToggleBtn.addEventListener('click', () => {
+            mobilePreviewModal.classList.remove('hidden');
+            // If doc exists, just re-render to ensure mobile canvas is populated
+            if (previewPdfDoc) renderPreviewPage(); 
+            else triggerPreviewUpdate();
+        });
+        closeMobilePreview.addEventListener('click', () => {
+            mobilePreviewModal.classList.add('hidden');
+        });
+
+        // --- Main Merge Handler (Optimized) ---
         async function handleMerge() {
             if (files.length === 0) return alert('Please add files first.');
 
@@ -691,167 +1038,36 @@
             loader.classList.remove('hidden');
 
             try {
-                // Determine Mode parameters
-                const isIdMode = document.getElementById('idModeToggle').checked;
-                const idScaleMode = idScaleSelect.value;
                 const targetSizeMB = (currentQualityMode === 'custom') ? parseFloat(targetSizeInput.value) : null;
-                
-                let initialQuality = 0.8;
-                if (currentQualityMode === 'small') initialQuality = 0.3;
-                if (currentQualityMode === 'medium') initialQuality = 0.6;
-                if (currentQualityMode === 'best') initialQuality = 0.95;
-                if (currentQualityMode === 'custom' && targetSizeMB) initialQuality = 0.9; 
+                const isAggressiveMode = currentQualityMode === 'small' || targetSizeMB;
 
-                let currentQuality = initialQuality;
+                let currentQuality = 0.85; 
+                let currentScale = 1.0; 
+                if (currentQualityMode === 'small') { currentQuality = 0.5; currentScale = 0.7; }
+                
                 let attempts = 0;
                 let success = false;
                 let finalPdfBytes = null;
-                const MAX_ATTEMPTS = targetSizeMB ? 3 : 1; 
+                const MAX_ATTEMPTS = targetSizeMB ? 5 : (currentQualityMode === 'small' ? 3 : 1); 
 
                 while (attempts < MAX_ATTEMPTS && !success) {
-                    if (targetSizeMB && attempts > 0) {
+                    if (attempts > 0) {
                         compressionMsg.classList.remove('translate-y-40', 'lg:translate-y-20');
-                        currentQuality -= 0.3; 
-                        if (currentQuality < 0.2) currentQuality = 0.2;
+                        compressionText.textContent = `Optimizing (Attempt ${attempts + 1})...`;
+                        currentQuality -= 0.15;
+                        currentScale -= 0.15;
+                        if (currentQuality < 0.1) currentQuality = 0.1;
+                        if (currentScale < 0.2) currentScale = 0.2;
                     }
 
-                    const pdfDoc = await PDFDocument.create();
+                    // Pass parameters to force compression if needed
+                    finalPdfBytes = await createPdf(isAggressiveMode ? currentQuality : null, isAggressiveMode ? currentScale : null);
                     
-                    const compressImage = async (file, q) => {
-                        return new Promise((resolve) => {
-                            const img = new Image();
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                img.src = e.target.result;
-                                img.onload = () => {
-                                    const canvas = document.createElement('canvas');
-                                    let scale = 1;
-                                    if (currentQualityMode === 'small') scale = 0.6; 
-                                    if (q < 0.4) scale = 0.7; 
-                                    
-                                    canvas.width = img.width * scale;
-                                    canvas.height = img.height * scale;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                    resolve(canvas.toDataURL('image/jpeg', q));
-                                };
-                            };
-                            reader.readAsDataURL(file);
-                        });
-                    };
-
-                    if (isIdMode) {
-                        const page = pdfDoc.addPage([595.28, 841.89]);
-                        const pageWidth = page.getWidth();
-                        const pageHeight = page.getHeight();
-                        const targets = files.slice(0, 2);
-                        
-                        let targetW = 250; 
-                        let targetH = 250; 
-                        if (idScaleMode === 'medium') { targetW = pageWidth * 0.8; targetH = pageHeight * 0.4; }
-                        if (idScaleMode === 'full') { targetW = pageWidth * 0.9; targetH = pageHeight * 0.45; }
-
-                        for (let i = 0; i < targets.length; i++) {
-                            const item = targets[i];
-                            let embedImg;
-                            let dims;
-
-                            // UI Rotation is Clockwise (0, 90, 180, 270)
-                            // pdf-lib drawImage rotate is Counter-Clockwise. 
-                            // So we pass -item.rotation.
-                            const drawRotation = degrees(-item.rotation);
-
-                            if (item.type === 'pdf') {
-                                const thumb = await generatePdfThumbnail(item.file);
-                                const imgBytes = await fetch(thumb).then(res => res.arrayBuffer());
-                                embedImg = await pdfDoc.embedPng(imgBytes);
-                            } else {
-                                const compressedDataUrl = await compressImage(item.file, currentQuality);
-                                const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
-                                embedImg = await pdfDoc.embedJpg(imgBytes);
-                            }
-                            
-                            dims = embedImg.scaleToFit(targetW, targetH);
-                            
-                            let itemCenterY;
-                            if (targets.length === 1) {
-                                itemCenterY = pageHeight / 2;
-                            } else {
-                                if (i === 0) itemCenterY = (pageHeight * 3) / 4;
-                                else itemCenterY = pageHeight / 4;
-                            }
-
-                            drawImageCentered(page, embedImg, {
-                                center_x: pageWidth / 2,
-                                center_y: itemCenterY,
-                                width: dims.width,
-                                height: dims.height,
-                                rotate: drawRotation
-                            });
-                        }
-                    } else {
-                        // Standard Mode
-                        for (const item of files) {
-                            if (item.type === 'pdf') {
-                                const arrayBuffer = await item.file.arrayBuffer();
-                                const srcPdf = await PDFDocument.load(arrayBuffer);
-                                const copiedPages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
-                                copiedPages.forEach((page) => {
-                                    const existingRotation = page.getRotation().angle || 0;
-                                    // PDF Page Rotate is Clockwise. UI is Clockwise.
-                                    const newRotation = (existingRotation + item.rotation) % 360;
-                                    page.setRotation(degrees(newRotation));
-                                    pdfDoc.addPage(page);
-                                });
-                            } else {
-                                const compressedDataUrl = await compressImage(item.file, currentQuality);
-                                const imgBytes = await fetch(compressedDataUrl).then(res => res.arrayBuffer());
-                                const embedImg = await pdfDoc.embedJpg(imgBytes);
-                                
-                                // --- Adaptive Page Orientation Logic ---
-                                // Check if rotated 90 or 270 degrees
-                                const isRotated = item.rotation % 180 !== 0;
-                                
-                                // A4 Dimensions
-                                const pW = 595.28;
-                                const pH = 841.89;
-
-                                // If rotated, we create a Landscape page
-                                const pageWidth = isRotated ? pH : pW;  
-                                const pageHeight = isRotated ? pW : pH;
-                                
-                                const page = pdfDoc.addPage([pageWidth, pageHeight]);
-                                
-                                // Calculate scale based on effective dimensions
-                                // If rotated, effective width is height, etc.
-                                const effectiveImgWidth = isRotated ? embedImg.height : embedImg.width;
-                                const effectiveImgHeight = isRotated ? embedImg.width : embedImg.height;
-                                
-                                const scaleX = pageWidth / effectiveImgWidth;
-                                const scaleY = pageHeight / effectiveImgHeight;
-                                const scale = Math.min(scaleX, scaleY); // Fit entirely within page
-                                
-                                const drawWidth = embedImg.width * scale;
-                                const drawHeight = embedImg.height * scale;
-                                
-                                // Pass negative rotation for images (CCW)
-                                drawImageCentered(page, embedImg, {
-                                    center_x: pageWidth / 2,
-                                    center_y: pageHeight / 2,
-                                    width: drawWidth,
-                                    height: drawHeight,
-                                    rotate: degrees(-item.rotation)
-                                });
-                            }
-                        }
-                    }
-
-                    finalPdfBytes = await pdfDoc.save();
                     const sizeInMB = finalPdfBytes.byteLength / (1024 * 1024);
 
                     if (targetSizeMB && sizeInMB > targetSizeMB) {
                         attempts++;
-                        console.log(`Attempt ${attempts}: ${sizeInMB.toFixed(2)}MB > ${targetSizeMB}MB`);
+                        console.log(`Size: ${sizeInMB.toFixed(2)}MB > Target: ${targetSizeMB}MB`);
                     } else {
                         success = true;
                     }
