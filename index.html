@@ -100,6 +100,11 @@
 </head>
 <body class="bg-[#F8FAFC] dark:bg-dark-bg text-slate-800 dark:text-slate-200 min-h-[100dvh] flex flex-col lg:flex-row lg:h-[100dvh] lg:overflow-hidden selection:bg-brand-100 dark:selection:bg-blue-900">
 
+    <!-- Version Number -->
+    <div class="fixed bottom-2 left-2 z-50 text-[10px] text-slate-300 dark:text-slate-700 font-mono pointer-events-none">
+        v1.0.8
+    </div>
+
     <!-- Mobile Header -->
     <div class="lg:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-surface border-b border-slate-200 dark:border-dark-border z-30 sticky top-0 shadow-sm">
         <div class="flex items-center gap-2">
@@ -569,7 +574,9 @@
             if (isPdf) {
                 preview = await generatePdfThumbnail(file);
             } else {
-                preview = await readFileAsDataURL(file);
+                // For images, generate a downscaled preview for the grid to avoid 
+                // crashing the UI/DOM with massive Data URLs
+                preview = await generateImageThumbnail(file, 1500); 
             }
 
             files.push({
@@ -581,10 +588,38 @@
             });
         }
 
+        // Renamed/Standardized file reader
         function readFileAsDataURL(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // NEW: Safe thumbnail generation for UI
+        async function generateImageThumbnail(file, maxDim) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            const ratio = Math.min(maxDim / w, maxDim / h);
+                            w *= ratio;
+                            h *= ratio;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.src = e.target.result;
+                };
                 reader.readAsDataURL(file);
             });
         }
@@ -715,7 +750,15 @@
 
         window.applyCrop = () => {
             if (!cropper || !currentCropId) return;
-            const canvas = cropper.getCroppedCanvas();
+            
+            // Limit cropped canvas size to safe bounds for mobile (2500px)
+            // Use white fill for transparent regions to prevent black squares
+            const canvas = cropper.getCroppedCanvas({
+                maxWidth: 2500,
+                maxHeight: 2500,
+                fillColor: '#FFFFFF'
+            });
+            
             const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
             const item = files.find(f => f.id === currentCropId);
             if (item) {
