@@ -759,17 +759,29 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     img.onload = () => {
+                        // Safe dimension check for iOS canvas limit (~16MP or 4096px)
+                        const MAX_DIM = 3500;
+                        let w = img.width * scaleFactor;
+                        let h = img.height * scaleFactor;
+                        
+                        if (w > MAX_DIM || h > MAX_DIM) {
+                            const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                            w *= ratio;
+                            h *= ratio;
+                        }
+
                         const canvas = document.createElement('canvas');
-                        canvas.width = img.width * scaleFactor;
-                        canvas.height = img.height * scaleFactor;
+                        canvas.width = w;
+                        canvas.height = h;
                         const ctx = canvas.getContext('2d');
+                        
                         // Fill white background to prevent black squares on transparency
                         ctx.fillStyle = '#FFFFFF';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         resolve(canvas.toDataURL('image/jpeg', q));
                     };
-                    img.src = e.target.result; // Set src AFTER onload
+                    img.src = e.target.result; 
                 };
                 reader.readAsDataURL(file);
             });
@@ -780,7 +792,17 @@
             const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
             const page = await pdf.getPage(1); 
             
-            const viewport = page.getViewport({ scale: 1.5 * scaleFactor });
+            // Limit viewport scale for PDF conversion too
+            let effectiveScale = 1.5 * scaleFactor;
+            
+            // Check approx dimension
+            const vpCheck = page.getViewport({ scale: effectiveScale });
+            if (vpCheck.width > 3500 || vpCheck.height > 3500) {
+                const ratio = Math.min(3500 / vpCheck.width, 3500 / vpCheck.height);
+                effectiveScale *= ratio;
+            }
+
+            const viewport = page.getViewport({ scale: effectiveScale });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
