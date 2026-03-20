@@ -367,7 +367,7 @@
         <div class="bg-white dark:bg-dark-surface rounded-3xl shadow-2xl w-full max-w-5xl flex flex-col h-[85vh] overflow-hidden border border-white/20">
             <div class="px-5 py-3 lg:px-6 lg:py-4 border-b border-slate-100 dark:border-dark-border flex justify-between items-center bg-white dark:bg-dark-surface z-10">
                 <div>
-                    <h3 class="font-bold text-base lg:text-lg text-slate-900 dark:text-white">Crop Image</h3>
+                    <h3 class="font-bold text-base lg:text-lg text-slate-900 dark:text-white">Crop & Rotate</h3>
                 </div>
                 <button onclick="closeCropModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark text-slate-500"></i>
@@ -375,6 +375,21 @@
             </div>
             <div class="flex-grow bg-[#0F0F0F] relative overflow-hidden flex items-center justify-center">
                 <img id="cropImageTarget" src="" class="max-w-full max-h-full block">
+            </div>
+            <div class="px-5 py-3 lg:px-6 lg:py-3 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface flex items-center gap-3 z-10">
+                <button onclick="cropRotate(-90)" title="Rotate 90° left" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors shrink-0">
+                    <i class="fa-solid fa-rotate-left text-sm text-slate-600 dark:text-slate-300"></i>
+                </button>
+                <button onclick="cropRotate(-1)" title="Rotate 1° left" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300">-1°</button>
+                <input id="cropRotationSlider" type="range" min="-45" max="45" value="0" step="0.5" oninput="cropRotateSlider(this.value)" class="flex-grow h-1.5 accent-brand-600 cursor-pointer">
+                <span id="cropRotationLabel" class="text-xs font-mono text-slate-500 dark:text-slate-400 w-12 text-center shrink-0">0°</span>
+                <button onclick="cropRotate(1)" title="Rotate 1° right" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300">+1°</button>
+                <button onclick="cropRotate(90)" title="Rotate 90° right" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors shrink-0">
+                    <i class="fa-solid fa-rotate-right text-sm text-slate-600 dark:text-slate-300"></i>
+                </button>
+                <button onclick="cropRotateReset()" title="Reset rotation" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-dark-bg hover:bg-slate-200 dark:hover:bg-[#333] flex items-center justify-center transition-colors shrink-0">
+                    <i class="fa-solid fa-arrows-rotate text-sm text-slate-600 dark:text-slate-300"></i>
+                </button>
             </div>
             <div class="p-4 lg:p-6 border-t border-slate-100 dark:border-dark-border bg-white dark:bg-dark-surface flex justify-end gap-3 z-10">
                 <button onclick="closeCropModal()" class="px-4 py-2 lg:px-5 lg:py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-dark-bg transition-colors">Cancel</button>
@@ -796,13 +811,43 @@
             modal.classList.remove('hidden');
             
             if (cropper) cropper.destroy();
-            cropper = new Cropper(imageTarget, { viewMode: 1, autoCropArea: 0.8, background: false });
+            cropCurrentAngle = 0;
+            document.getElementById('cropRotationSlider').value = 0;
+            document.getElementById('cropRotationLabel').textContent = '0°';
+            cropper = new Cropper(imageTarget, { viewMode: 1, autoCropArea: 0.8, background: false, rotatable: true });
         };
 
         window.closeCropModal = () => {
             document.getElementById('cropModal').classList.add('hidden');
             if (cropper) { cropper.destroy(); cropper = null; }
             currentCropId = null;
+            cropCurrentAngle = 0;
+        };
+
+        let cropCurrentAngle = 0;
+
+        window.cropRotate = (deg) => {
+            if (!cropper) return;
+            cropCurrentAngle += deg;
+            cropper.rotateTo(cropCurrentAngle);
+            document.getElementById('cropRotationSlider').value = Math.max(-45, Math.min(45, cropCurrentAngle));
+            document.getElementById('cropRotationLabel').textContent = cropCurrentAngle + '°';
+        };
+
+        window.cropRotateSlider = (val) => {
+            if (!cropper) return;
+            const delta = parseFloat(val) - cropCurrentAngle;
+            cropCurrentAngle = parseFloat(val);
+            cropper.rotateTo(cropCurrentAngle);
+            document.getElementById('cropRotationLabel').textContent = cropCurrentAngle + '°';
+        };
+
+        window.cropRotateReset = () => {
+            if (!cropper) return;
+            cropCurrentAngle = 0;
+            cropper.rotateTo(0);
+            document.getElementById('cropRotationSlider').value = 0;
+            document.getElementById('cropRotationLabel').textContent = '0°';
         };
 
         window.applyCrop = () => {
