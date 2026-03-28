@@ -81,6 +81,17 @@
             background-color: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #60a5fa;
         }
 
+        /* Format Options Grid */
+        .format-option {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .format-option.active {
+            background-color: #eff6ff; border-color: #3b82f6; color: #1d4ed8;
+        }
+        .dark .format-option.active {
+            background-color: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #60a5fa;
+        }
+
         /* Drop Zone Animation */
         .drop-zone {
             background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%23CBD5E1' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
@@ -159,9 +170,28 @@
                     <label class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Output Filename</label>
                     <div class="relative group">
                         <i class="fa-regular fa-file-pdf absolute left-3 top-3 lg:top-2.5 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
-                        <input type="text" id="filenameInput" value="merged_document" 
+                        <input type="text" id="filenameInput" value="merged_document"
                             class="w-full bg-slate-50 dark:bg-[#252525] border border-slate-200 dark:border-dark-border rounded-xl py-2.5 lg:py-2 pl-9 pr-12 text-base lg:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-700 dark:text-slate-300">
-                        <span class="absolute right-3 top-3 lg:top-2.5 text-xs text-slate-400 font-medium">.pdf</span>
+                        <span id="filenameExt" class="absolute right-3 top-3 lg:top-2.5 text-xs text-slate-400 font-medium">.pdf</span>
+                    </div>
+                </div>
+
+                <!-- Output Format -->
+                <div>
+                    <label class="text-[11px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Output Format</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="format-option active p-2 rounded-xl border border-slate-200 dark:border-dark-border bg-white dark:bg-[#252525] text-center hover:border-brand-300 transition-all group" data-value="pdf">
+                            <i class="fa-regular fa-file-pdf text-sm text-slate-400 group-[.active]:text-brand-500"></i>
+                            <div class="text-[11px] font-semibold mt-1">PDF</div>
+                        </button>
+                        <button class="format-option p-2 rounded-xl border border-slate-200 dark:border-dark-border bg-white dark:bg-[#252525] text-center hover:border-brand-300 transition-all group" data-value="png">
+                            <i class="fa-regular fa-image text-sm text-slate-400 group-[.active]:text-brand-500"></i>
+                            <div class="text-[11px] font-semibold mt-1">PNG</div>
+                        </button>
+                        <button class="format-option p-2 rounded-xl border border-slate-200 dark:border-dark-border bg-white dark:bg-[#252525] text-center hover:border-brand-300 transition-all group" data-value="jpg">
+                            <i class="fa-regular fa-image text-sm text-slate-400 group-[.active]:text-brand-500"></i>
+                            <div class="text-[11px] font-semibold mt-1">JPG</div>
+                        </button>
                     </div>
                 </div>
 
@@ -484,7 +514,8 @@
         let files = []; 
         let currentCropId = null;
         let cropper = null;
-        let currentQualityMode = 'medium'; 
+        let currentQualityMode = 'medium';
+        let currentOutputFormat = 'pdf';
         let previewDebounceTimer;
         
         // Preview State
@@ -535,6 +566,18 @@
                     targetSizeInput.value = ''; 
                 }
                 triggerPreviewUpdate(); // Re-render preview implies quality might change eventually, but mostly layout here
+            });
+        });
+
+        // --- Format Preset Logic ---
+        const formatBtns = document.querySelectorAll('.format-option');
+        const filenameExt = document.getElementById('filenameExt');
+        formatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                formatBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentOutputFormat = btn.dataset.value;
+                filenameExt.textContent = '.' + currentOutputFormat;
             });
         });
 
@@ -1245,7 +1288,32 @@
                     }
                 } 
 
-                download(finalPdfBytes, userFilename + ".pdf", "application/pdf");
+                if (currentOutputFormat === 'pdf') {
+                    download(finalPdfBytes, userFilename + ".pdf", "application/pdf");
+                } else {
+                    // Render PDF pages to images via pdf.js
+                    const pdfForRender = await pdfjsLib.getDocument(finalPdfBytes).promise;
+                    const totalPages = pdfForRender.numPages;
+                    const imgType = currentOutputFormat === 'png' ? 'image/png' : 'image/jpeg';
+                    const ext = currentOutputFormat === 'png' ? '.png' : '.jpg';
+
+                    for (let p = 1; p <= totalPages; p++) {
+                        const page = await pdfForRender.getPage(p);
+                        const scale = 2; // 2x for good resolution
+                        const viewport = page.getViewport({ scale });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.floor(viewport.width);
+                        canvas.height = Math.floor(viewport.height);
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, imgType, 0.92));
+                        const suffix = totalPages > 1 ? '_' + p : '';
+                        download(blob, userFilename + suffix + ext, imgType);
+                    }
+                }
 
             } catch (err) {
                 console.error(err);
@@ -1262,7 +1330,7 @@
         document.getElementById('desktopMergeBtn').addEventListener('click', handleMerge);
 
         function download(data, filename, type) {
-            const blob = new Blob([data], { type: type });
+            const blob = data instanceof Blob ? data : new Blob([data], { type: type });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.style.display = "none";
